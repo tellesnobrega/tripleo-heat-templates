@@ -44,6 +44,10 @@ parameters:
   MonitoringSubscriptionSaharaEngine:
     default: 'overcloud-sahara-engine'
     type: string
+  EnableSahara:
+    default: false
+    description: Forcefully keep Sahara enabled on upgrade
+    type: boolean
 
 resources:
 
@@ -68,6 +72,19 @@ outputs:
     description: Role data for the Sahara Engine role.
     value:
       service_name: sahara_engine
+      upgrade_tasks:
+        when: step == '1'
+        block:
+          - name: set fact for EnableSahara
+            set_fact:
+              enable_sahara: {get_param: EnableSahara}
+          - name: fail unless EnableSahara is enabled
+            fail:
+              msg: >
+                Sahara has been removed from OSP 16 and should not be
+                upgraded. If you intend to keep Sahara on OSP 16 you
+                should set the EnableSahara parameter to true.
+            when: not enable_sahara
       monitoring_subscription: {get_param: MonitoringSubscriptionSaharaEngine}
       config_settings:
         map_merge:

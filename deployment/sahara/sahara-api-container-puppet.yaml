@@ -62,6 +62,10 @@ parameters:
       e.g. { sahara-context_is_admin: { key: context_is_admin, value: 'role:admin' } }
     default: {}
     type: json
+  EnableSahara:
+    default: false
+    description: Forcefully keep Sahara enabled on upgrade
+    type: boolean
 
 resources:
 
@@ -86,6 +90,19 @@ outputs:
     description: Role data for the Sahara API role.
     value:
       service_name: sahara_api
+      upgrade_tasks:
+        when: step == '1'
+        block:
+          - name: set fact for EnableSahara
+            set_fact:
+              enable_sahara: {get_param: EnableSahara}
+          - name: fail unless EnableSahara is enabled
+            fail:
+              msg: >
+                Sahara has been removed from OSP 16 and should not be
+                upgraded. If you intend to keep Sahara on OSP 16 you
+                should set the EnableSahara parameter to true.
+            when: not enable_sahara
       monitoring_subscription: {get_param: MonitoringSubscriptionSaharaApi}
       config_settings:
         map_merge:
